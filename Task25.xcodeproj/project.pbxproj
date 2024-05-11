@@ -40,7 +40,6 @@
 		754FFC342BEE8A6F0034942B = {
 			isa = PBXGroup;
 			children = (
-				754FFC5A2BEEA0C10034942B /* UIComponentsExtensions .swift */,
 				754FFC3F2BEE8A6F0034942B /* Task25 */,
 				754FFC3E2BEE8A6F0034942B /* Products */,
 			);
@@ -58,11 +57,11 @@
 			isa = PBXGroup;
 			children = (
 				754FFC572BEE8B180034942B /* App */,
-				754FFC442BEE8A6F0034942B /* MainViewController.swift */,
-				754FFC582BEE8D880034942B /* MainViewModel.swift */,
+				754FFC5C2BEEF8130034942B /* MainPage */,
 				754FFC542BEE8AC20034942B /* Launch */,
 				754FFC552BEE8ADF0034942B /* Supporting Files */,
 				754FFC562BEE8B0F0034942B /* Resources */,
+				754FFC5D2BEEF82E0034942B /* UIComponentsExtension */,
 			);
 			path = Task25;
 			sourceTree = "<group>";
@@ -97,6 +96,23 @@
 				754FFC402BEE8A6F0034942B /* AppDelegate.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		754FFC5C2BEEF8130034942B /* MainPage */ = {
+			isa = PBXGroup;
+			children = (
+				754FFC442BEE8A6F0034942B /* MainViewController.swift */,
+				754FFC582BEE8D880034942B /* MainViewModel.swift */,
+			);
+			path = MainPage;
+			sourceTree = "<group>";
+		};
+		754FFC5D2BEEF82E0034942B /* UIComponentsExtension */ = {
+			isa = PBXGroup;
+			children = (
+				754FFC5A2BEEA0C10034942B /* UIComponentsExtensions .swift */,
+			);
+			path = UIComponentsExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
