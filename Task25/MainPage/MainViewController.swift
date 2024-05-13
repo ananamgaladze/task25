@@ -8,7 +8,7 @@
 
 import UIKit
 
-final class MainViewController: UIViewController {
+class MainViewController: UIViewController {
     //MARK: ---Properties
     lazy var songImage: UIImageView = {
         let image = UIImageView(image: UIImage(named: "taylor"))
@@ -268,90 +268,52 @@ final class MainViewController: UIViewController {
         
     }
     
-//    func togglePlayback() {
-//        isPaused.toggle()
-//        let imageName = isPaused ? "pause" : "play"
-//        let symbolConfiguration = UIImage.SymbolConfiguration(pointSize: 35, weight: .regular)
-//        let image = UIImage(systemName: imageName, withConfiguration: symbolConfiguration)
-//        button.setImage(image, for: .normal)
-//        
-//    if isPaused {
-//        if isFirstPlayTap {
-//            isFirstPlayTap = false
-//        } else {
-//            loadingImageView.isHidden = false
-//            
-//            UIView.animate(withDuration: 0.5, delay: 0, options: [.curveLinear, .repeat], animations: {
-//                self.loadingImageView.transform = self.loadingImageView.transform.rotated(by: .pi)
-//            }, completion: nil)
-//            
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//                self.loadingImageView.isHidden = true
-//                
-//                self.progressTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-//                    guard let self = self else { return }
-//                    if self.progressValue >= 1.0 {
-//                        self.progressTimer?.invalidate()
-//                        return
-//                    }
-//                    self.progressValue += 0.01
-//                    self.progressBar.setProgress(self.progressValue, animated: true)
-//                }
-//                
-//                UIView.animate(withDuration: 1) {
-//                    self.songImage.transform = .identity
-//                }
-//            }
-//        }
-//    } else {
-//        
-//        progressTimer?.invalidate()
-//        UIView.animate(withDuration: 0.5) {
-//            self.songImage.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
-//        }
-//    }
-//}
+    func setPhoto() {
+        
+    }
+    
     func togglePlayback() {
         isPaused.toggle()
-        let imageName = isPaused ? "pause" : "play"
-        let symbolConfiguration = UIImage.SymbolConfiguration(pointSize: 35, weight: .regular)
-        let image = UIImage(systemName: imageName, withConfiguration: symbolConfiguration)
-        button.setImage(image, for: .normal)
+        updateButtonImage()
         
         if isPaused {
             handlePause()
         } else {
-            handlePlay()
+            handleResume()
         }
     }
-
+    
+    private func updateButtonImage() {
+        let imageName = isPaused ? "pause" : "play"
+        let symbolConfiguration = UIImage.SymbolConfiguration(pointSize: 35, weight: .regular)
+        let image = UIImage(systemName: imageName, withConfiguration: symbolConfiguration)
+        button.setImage(image, for: .normal)
+    }
+    
     private func handlePause() {
         if isFirstPlayTap {
             isFirstPlayTap = false
         } else {
-            loadingImageView.isHidden = false
-            animateLoadingImage()
+            startLoadingAnimation()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.loadingImageView.isHidden = true
+                self.stopLoadingAnimation()
                 self.startProgressTimer()
-                self.animateSongImage()                                                    
+                self.resetSongImageTransform()
             }
         }
     }
-
-    private func handlePlay()
-    progressTimer?.invalidate()
-        UIView.animate(withDuration: 0.5) {
-            self.songImage.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
-        }
-    }
-
-    private func animateLoadingImage() {
+    
+    private func startLoadingAnimation() {
+        loadingImageView.isHidden = false
         UIView.animate(withDuration: 0.5, delay: 0, options: [.curveLinear, .repeat], animations: {
             self.loadingImageView.transform = self.loadingImageView.transform.rotated(by: .pi)
         }, completion: nil)
     }
-
+    
+    private func stopLoadingAnimation() {
+        loadingImageView.isHidden = true
+    }
+    
     private func startProgressTimer() {
         progressTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             guard let self = self else { return }
@@ -363,16 +325,23 @@ final class MainViewController: UIViewController {
             self.progressBar.setProgress(self.progressValue, animated: true)
         }
     }
-
-    private func animateSongImage() {
+    
+    private func resetSongImageTransform() {
         UIView.animate(withDuration: 1) {
             self.songImage.transform = .identity
+        }
+    }
+    
+    private func handleResume() {
+        progressTimer?.invalidate()
+        UIView.animate(withDuration: 0.5) {
+            self.songImage.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
         }
     }
 }
 
 
-
 #Preview {
     MainViewController()
 }
+
