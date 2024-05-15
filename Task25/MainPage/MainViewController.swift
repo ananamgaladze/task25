@@ -8,7 +8,7 @@
 
 import UIKit
 
-class MainViewController: UIViewController {
+final class MainViewController: UIViewController {
     //MARK: ---Properties
     lazy var songImage: UIImageView = {
         let image = UIImageView(image: UIImage(named: "taylor"))
@@ -58,7 +58,6 @@ class MainViewController: UIViewController {
     }()
     
     let shuffleImage = UIImageView.sfSymbolImageView(systemName: "shuffle")
-    let shuffleImage1 = UIImageView.sfSymbolImageView(systemName: "shuffle")
     let skipBackImage = UIImageView.sfSymbolImageView(systemName: "backward.end")
     let skipForwardImage = UIImageView.sfSymbolImageView(systemName: "forward.end")
     let repeatImage = UIImageView.sfSymbolImageView(systemName: "repeat")
@@ -73,7 +72,6 @@ class MainViewController: UIViewController {
         return stackView
     }()
     
-    
     lazy var button: UIButton = {
         let button = UIButton()
         button.backgroundColor = .systemBlue
@@ -86,7 +84,7 @@ class MainViewController: UIViewController {
         button.layer.cornerRadius = 38
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addAction(UIAction(handler: { [weak self] _ in
-            self?.togglePlayback()
+            self?.viewModel.togglePlayback()
         }), for: .touchUpInside)
         return button
     }()
@@ -124,16 +122,23 @@ class MainViewController: UIViewController {
     let musicTabButton = UIButton.sfSymbolButton(systemName: "music.note")
     let heartTabButton = UIButton.sfSymbolButton(systemName: "heart")
     
-    var isPaused = false
-    var progressTimer: Timer?
-    var progressValue: Float = 0.0
-    var isFirstPlayTap = true
-    var selectedButton: UIButton?
+    private var viewModel: MainViewModel
+     //MARK: ---init
+    init(viewModel: MainViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     //MARK: ---Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
         setUpUI()
+        viewModel.delegate = self
     }
     
     //MARK: ---Methods
@@ -145,8 +150,6 @@ class MainViewController: UIViewController {
         addButtonsStackView()
         addYurebisUgareshodView()
         addTabBarStackView()
-        
-        songImage.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
     }
     
     func addSongImage() {
@@ -230,118 +233,72 @@ class MainViewController: UIViewController {
         tabBarStackView.addArrangedSubview(musicTabButton)
         tabBarStackView.addArrangedSubview(heartTabButton)
         
-        homeTabButton.addAction(UIAction(handler: { [weak self] _ in
-            self?.tabBarButtonTapped(self!.homeTabButton)
-        }), for: .touchUpInside)
-        
-        musicTabButton.addAction(UIAction(handler: { [weak self] _ in
-            self?.tabBarButtonTapped(self!.musicTabButton)
-        }), for: .touchUpInside)
-        
-        heartTabButton.addAction(UIAction(handler: { [weak self] _ in
-            self?.tabBarButtonTapped(self!.heartTabButton)
-        }), for: .touchUpInside)
+        let tabButtons = [homeTabButton, musicTabButton, heartTabButton]
+        for (index, button) in tabButtons.enumerated() {
+            button.addAction(UIAction(handler: { [weak self] _ in
+                self?.viewModel.selectedTabIndex = index
+            }), for: .touchUpInside)
+        }
         
         NSLayoutConstraint.activate([
             tabBarStackView.topAnchor.constraint(equalTo: yurebisUgareshodView.topAnchor, constant: 23),
             tabBarStackView.centerXAnchor.constraint(equalTo: yurebisUgareshodView.centerXAnchor),
         ])
     }
-    
-    func tabBarButtonTapped(_ sender: UIButton) {
-        
-        guard sender != selectedButton else { return }
-        
-        if let selectedButton = selectedButton {
+}
+
+
+
+
+extension MainViewController: MainViewModelDelegate {
+    func didUpdateSelectedTabIndex(selectedIndex: Int) {
+        let tabButtons = [homeTabButton, musicTabButton, heartTabButton]
+        for (i, button) in tabButtons.enumerated() {
             UIView.animate(withDuration: 0.2) {
-                selectedButton.transform = .identity
-                selectedButton.tintColor = .systemGray
-            }
-        }
-        
-        selectedButton = sender
-        
-        UIView.animate(withDuration: 0.2) {
-            sender.transform = CGAffineTransform(scaleX: 2, y: 2)
-            sender.tintColor = .systemBlue
-        }
-        
-    }
-    
-    func setPhoto() {
-        
-    }
-    
-    func togglePlayback() {
-        isPaused.toggle()
-        updateButtonImage()
-        
-        if isPaused {
-            handlePause()
-        } else {
-            handleResume()
-        }
-    }
-    
-    private func updateButtonImage() {
-        let imageName = isPaused ? "pause" : "play"
-        let symbolConfiguration = UIImage.SymbolConfiguration(pointSize: 35, weight: .regular)
-        let image = UIImage(systemName: imageName, withConfiguration: symbolConfiguration)
-        button.setImage(image, for: .normal)
-    }
-    
-    private func handlePause() {
-        if isFirstPlayTap {
-            isFirstPlayTap = false
-        } else {
-            startLoadingAnimation()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.stopLoadingAnimation()
-                self.startProgressTimer()
-                self.resetSongImageTransform()
+                button.transform = i == selectedIndex ? CGAffineTransform(scaleX: 2, y: 2) : .identity
+                button.tintColor = i == selectedIndex ? .systemBlue : .systemGray
             }
         }
     }
     
-    private func startLoadingAnimation() {
+    func startLoadingAnimation() {
         loadingImageView.isHidden = false
         UIView.animate(withDuration: 0.5, delay: 0, options: [.curveLinear, .repeat], animations: {
             self.loadingImageView.transform = self.loadingImageView.transform.rotated(by: .pi)
         }, completion: nil)
     }
     
-    private func stopLoadingAnimation() {
+    func stopLoadingAnimation() {
         loadingImageView.isHidden = true
     }
     
-    private func startProgressTimer() {
-        progressTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            if self.progressValue >= 1.0 {
-                self.progressTimer?.invalidate()
-                return
-            }
-            self.progressValue += 0.01
-            self.progressBar.setProgress(self.progressValue, animated: true)
-        }
-    }
-    
-    private func resetSongImageTransform() {
+    func resetSongImageTransform() {
         UIView.animate(withDuration: 1) {
             self.songImage.transform = .identity
         }
+        
     }
     
-    private func handleResume() {
-        progressTimer?.invalidate()
+    
+    func configureUpdateButtonImage(isPaused: String) {
+        let symbolConfiguration = UIImage.SymbolConfiguration(pointSize: 35, weight: .regular)
+        let image = UIImage(systemName: isPaused, withConfiguration: symbolConfiguration)
+        button.setImage(image, for: .normal)
+    }
+    
+    
+    func setProgress(progressValue: Float, animated: Bool) {
+        progressBar.setProgress(progressValue, animated: false)
+    }
+    
+    func transformImageToSmall() {
         UIView.animate(withDuration: 0.5) {
             self.songImage.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
         }
     }
 }
 
-
-#Preview {
-    MainViewController()
-}
+//#Preview {
+//    MainViewController()
+//}
 
